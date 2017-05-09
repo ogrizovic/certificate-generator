@@ -11,9 +11,7 @@ public class CertificateData {
 	private int keySize;
 	private String keyType;
 	
-	public void setKeyType(String keyType) {
-		this.keyType = keyType;
-	}
+	
 
 	private String commonName;
 	private String organization;
@@ -49,8 +47,11 @@ public class CertificateData {
 		this.keystorePass = keystorePass;
 	}
 
+	
 
-
+	public void setKeyType(String keyType) {
+		this.keyType = keyType;
+	}
 
 	public String getKeyType() {
 		return keyType;

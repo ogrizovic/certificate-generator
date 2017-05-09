@@ -41,8 +41,8 @@ public class CertificateCtrl {
 	@RequestMapping(method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<CertificateData> add(CertificateData cer){
-		// TODO: Implement
+	public ResponseEntity<CertificateData> add(CertificateData cer) throws Exception{
+		cerService.newCertificate(cer);
 		return null;
 	}
 	

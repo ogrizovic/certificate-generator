@@ -4,8 +4,11 @@ package com.cergenerator.controller;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,10 +43,16 @@ public class CertificateCtrl {
 	
 	@RequestMapping(method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
-			produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<CertificateData> add(CertificateData cer) throws Exception{
-		cerService.newCertificate(cer);
-		return null;
+			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	public ResponseEntity<byte[]> add(@RequestBody CertificateData cer) throws Exception{
+		byte[] c = cerService.newCertificate(cer);
+		if (c != null){
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentDispositionFormData(cer.getSerialNumber()+".cer", cer.getSerialNumber()+".cer");
+			headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+			return new ResponseEntity<byte[]>(c, headers, HttpStatus.OK);
+		}
+		return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 	}
 	
 	// Povlacenje sertifikata

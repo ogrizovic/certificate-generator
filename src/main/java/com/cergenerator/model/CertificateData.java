@@ -1,8 +1,11 @@
+/*
+POJO koji prima ulazne podatke. Iz njega se izvlace podaci potrebni za SubjectData i IssuerData.
+*/
 package com.cergenerator.model;
 
 public class CertificateData {
 
-	private int serialNumber;	//automatski
+	private String serialNumber;	//automatski
 	private boolean ca;
 	private boolean revoked;
 	
@@ -10,8 +13,6 @@ public class CertificateData {
 	
 	private int keySize;
 	private String keyType;
-	
-	
 
 	private String commonName;
 	private String organization;
@@ -28,9 +29,11 @@ public class CertificateData {
 	}
 	
 
-	public CertificateData(boolean ca, boolean revoked, int keySize, String keyType, String commonName, String organization,
-			String organizationUnit, String city, String state, String country, int validity, String alias,
-			char[] keystorePass) {
+	
+
+	public CertificateData(boolean ca, boolean revoked, int keySize, String keyType, String commonName,
+			String organization, String organizationUnit, String city, String state, String country, int validity,
+			String alias, char[] keystorePass) {
 		super();
 		this.ca = ca;
 		this.revoked = revoked;
@@ -47,7 +50,17 @@ public class CertificateData {
 		this.keystorePass = keystorePass;
 	}
 
-	
+
+
+
+	@Override
+	public String toString() {
+		// TODO Auto-generated method stub
+		return Boolean.toString(ca) + " " + Boolean.toString(revoked) + " " + keySize + " " + keyType +
+				" " + commonName + " " + organization + " " + organizationUnit + " " + city + " " + state + " " + country +
+				" " + validity + " " + alias + " " + keystorePass.toString() + "\n";
+	}
+
 
 	public void setKeyType(String keyType) {
 		this.keyType = keyType;
@@ -74,11 +87,11 @@ public class CertificateData {
 		this.ca = ca;
 	}
 
-	public int getSerialNumber() {
+	public String getSerialNumber() {
 		return serialNumber;
 	}
 
-	public void setSerialNumber(int serialNumber) {
+	public void setSerialNumber(String serialNumber) {
 		this.serialNumber = serialNumber;
 	}
 

@@ -1,36 +1,29 @@
 package com.cergenerator.service;
 
-import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
-import java.security.KeyFactory;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
+import java.io.ObjectOutputStream;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.Security;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPrivateCrtKeySpec;
-import java.security.spec.RSAPublicKeySpec;
 import java.util.Date;
 
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.bouncycastle.cert.X509v3CertificateBuilder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.springframework.stereotype.Service;
-
 import com.cergenerator.model.CertificateData;
+import com.cergenerator.model.IssuerData;
+import com.cergenerator.model.SubjectData;
+import com.cergenerator.service.helper.CertificateGenerator;
+import com.cergenerator.service.helper.KeyStoreReader;
+import com.cergenerator.service.helper.KeyStoreWriter;
 
 @Service
 public class CertificateService {
@@ -38,21 +31,115 @@ public class CertificateService {
 //	private static final String BC = BouncyCastleProvider.PROVIDER_NAME;
 	
 	public CertificateService() {
-		// TODO Auto-generated constructor stub
+		Security.addProvider(new BouncyCastleProvider());
 	}
 	
-	public CertificateData newCertificate(CertificateData cerData) throws OperatorCreationException, CertificateException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
+	public byte[] newCertificate (CertificateData cerData){
+		try {
+			SubjectData subjectData = generateSubjectData(cerData);
+			
+			KeyPair keyPairIssuer = generateKeyPair(2048, "RSA");
+			IssuerData issuerData = generateIssuerData(keyPairIssuer.getPrivate());
+			
+			CertificateGenerator cg = new CertificateGenerator();
+			X509Certificate cert = cg.generateCertificate(subjectData, issuerData);
+			
+			System.out.println("\n===== Podaci o izdavacu sertifikata =====");
+			System.out.println(cert.getIssuerX500Principal().getName());
+			System.out.println("\n===== Podaci o vlasniku sertifikata =====");
+			System.out.println(cert.getSubjectX500Principal().getName());
+			System.out.println("\n===== Sertifikat =====");
+			System.out.println("-------------------------------------------------------");
+			System.out.println(cert);
+			System.out.println("-------------------------------------------------------");
+			
+
+			KeyStoreWriter keyStoreWriter = new KeyStoreWriter();
+			keyStoreWriter.loadKeyStore(null, cerData.getKeystorePass());
+			keyStoreWriter.write(cerData.getAlias(), subjectData.getPrivateKey(), cerData.getKeystorePass(), cert);
+			keyStoreWriter.saveKeyStore(cerData.getAlias()+".jks", cerData.getKeystorePass()); // keystore pass je isti kao i pass za key store entry
+		
+			KeyStoreReader keyStoreReader = new KeyStoreReader();
+			X509Certificate certificate = (X509Certificate) keyStoreReader.readCertificate(cerData.getAlias()+".jks", cerData.getKeystorePass(), cerData.getAlias());
+			
+			ByteArrayOutputStream b = new ByteArrayOutputStream();
+			ObjectOutputStream o = new ObjectOutputStream(b);
+			o.writeObject(certificate);
+			
+			return b.toByteArray();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+		}
+		return null;
+	}
+	
+	private SubjectData generateSubjectData(CertificateData cerData) {
+		KeyPair keyPairSubject = generateKeyPair(cerData.getKeySize(), cerData.getKeyType());
+		
+		//SimpleDateFormat iso8601Formater = new SimpleDateFormat("yyyy-MM-dd");
+		Date startDate = new Date(System.currentTimeMillis());
+		Date endDate = new Date(System.currentTimeMillis() + (cerData.getValidity() * 86400000));
+
+		//String serialNumber = UUID.randomUUID().toString();
+		String serialNumber = "12345";
+		
+		X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
+		builder.addRDN(BCStyle.CN, cerData.getCommonName());
+		builder.addRDN(BCStyle.O, cerData.getOrganization());
+		builder.addRDN(BCStyle.OU, cerData.getOrganizationUnit());
+		builder.addRDN(BCStyle.C, cerData.getCountry());
+		builder.addRDN(BCStyle.ST, cerData.getState());
+		builder.addRDN(BCStyle.L, cerData.getCity());
+		
+		return new SubjectData(keyPairSubject.getPrivate(), keyPairSubject.getPublic(), builder.build(), serialNumber, startDate, endDate);
+	}
+	
+	private KeyPair generateKeyPair(int keySize, String keyType) {
+        try {
+			KeyPairGenerator keyGen = KeyPairGenerator.getInstance(keyType); 
+			SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+			keyGen.initialize(keySize, random);
+			return keyGen.generateKeyPair();
+        } catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (NoSuchProviderException e) {
+			e.printStackTrace();
+		}
+        return null;
+	}
+
+	private IssuerData generateIssuerData(PrivateKey issuerKey) {
+		X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
+	    builder.addRDN(BCStyle.CN, "Nikola Luburic");
+	    builder.addRDN(BCStyle.SURNAME, "Luburic");
+	    builder.addRDN(BCStyle.GIVENNAME, "Nikola");
+	    builder.addRDN(BCStyle.O, "UNS-FTN");
+	    builder.addRDN(BCStyle.OU, "Katedra za informatiku");
+	    builder.addRDN(BCStyle.C, "RS");
+	    builder.addRDN(BCStyle.E, "nikola.luburic@uns.ac.rs");
+	    //UID (USER ID) je ID korisnika
+	    builder.addRDN(BCStyle.UID, "654321");
+
+		//Kreiraju se podaci za issuer-a, sto u ovom slucaju ukljucuje:
+	    // - privatni kljuc koji ce se koristiti da potpise sertifikat koji se izdaje
+	    // - podatke o vlasniku sertifikata koji izdaje nov sertifikat
+		return new IssuerData(issuerKey, builder.build());
+	}
+	
+	/*public CertificateData newCertificate(CertificateData cerData) throws OperatorCreationException, CertificateException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, InvalidKeyException, SignatureException {
 		
 		String BC = BouncyCastleProvider.PROVIDER_NAME;
 		Security.addProvider(new BouncyCastleProvider());
 		
-		System.out.println("Provajder: " + BC);
-		// a sample key pair.
-		
+		Random rdm = SecureRandom.getInstanceStrong();
 		RSAPublicKeySpec pubKeySpec = new RSAPublicKeySpec(
 				new BigInteger("b4a7e46170574f16a97082b22be58b6a2a629798419be12872a4bdba626cfae9900f76abfb12139dce5de56564fab2b6543165a040c606887420e33d91ed7ed7", 16),
-				new BigInteger("11", 16));
+//				new BigInteger(1024, rdm),
+				new BigInteger("11", 16)); // 17?
 		
+//		RSAPrivateCrtKeySpec privKeySpec = new RSAPrivateCrtKeySpec(new BigInteger(1024, rdm),
 		RSAPrivateCrtKeySpec privKeySpec = new RSAPrivateCrtKeySpec(new BigInteger("b4a7e46170574f16a97082b22be58b6a2a629798419be12872a4bdba626cfae9900f76abfb12139dce5de56564fab2b6543165a040c606887420e33d91ed7ed7", 16),
 	            new BigInteger("11", 16),
 	            new BigInteger("9f66f6b05410cd503b2709e88115d55daced94d1a34d4e32bf824d0dde6028ae79c5f07b580f5dce240d7111f7ddb130a7945cd7d957d1920994da389f490c89", 16),
@@ -75,12 +162,12 @@ public class CertificateService {
 		// name table.
 		
 		X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
-/*		builder.addRDN(BCStyle.CN, cerData.getCommonName());
+		builder.addRDN(BCStyle.CN, cerData.getCommonName());
 		builder.addRDN(BCStyle.O, cerData.getOrganization());
 		builder.addRDN(BCStyle.OU, cerData.getOrganizationUnit());
 		builder.addRDN(BCStyle.C, cerData.getCountry());
 		builder.addRDN(BCStyle.ST, cerData.getState());
-		builder.addRDN(BCStyle.L, cerData.getCity());*/
+		builder.addRDN(BCStyle.L, cerData.getCity());
 		
 		builder.addRDN(BCStyle.CN, "CommonName");
 		builder.addRDN(BCStyle.O, "Organization");
@@ -102,6 +189,9 @@ public class CertificateService {
 				
 		X509Certificate cert = new JcaX509CertificateConverter().setProvider(BC).getCertificate(certGen.build(sigGen));	
 		
+		cert.checkValidity(new Date(System.currentTimeMillis() - 1000));
+		cert.verify(pubKey);
+		
 		System.out.println(cert);
 		
 		Certificate[] chain = new X509Certificate[1];
@@ -120,5 +210,5 @@ public class CertificateService {
 		return null;
 		
 	
-	}
+	}*/
 }

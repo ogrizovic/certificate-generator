@@ -4,8 +4,6 @@ package com.cergenerator.controller;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cergenerator.model.CertificateData;
 import com.cergenerator.service.CertificateService;
+import com.cergenerator.service.helper.CertType;
 
 @RestController
 @RequestMapping("/certificate")
@@ -44,15 +43,15 @@ public class CertificateCtrl {
 	@RequestMapping(method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-	public ResponseEntity<byte[]> add(@RequestBody CertificateData cer) throws Exception{
-		byte[] c = cerService.newCertificate(cer);
-		if (c != null){
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentDispositionFormData(cer.getSerialNumber()+".cer", cer.getSerialNumber()+".cer");
-			headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-			return new ResponseEntity<byte[]>(c, headers, HttpStatus.OK);
+	public void add(@RequestBody CertificateData cer) throws Exception{
+		System.out.println(cer.toString());
+		if (cer.isCa() == true){
+			if (cer.getSignedBy().equals("self")){
+				cerService.newCertificate(cer, CertType.SELFSIGNED_CA);
+			}
+			else cerService.newCertificate(cer, CertType.CA);
 		}
-		return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+		else cerService.newCertificate(cer, CertType.REGULAR);
 	}
 	
 	// Povlacenje sertifikata

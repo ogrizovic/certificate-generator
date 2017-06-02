@@ -9,8 +9,6 @@ public class CertificateData {
 	private boolean ca;
 	private boolean revoked;
 	
-	
-	
 	private int keySize;
 	private String keyType;
 
@@ -23,17 +21,18 @@ public class CertificateData {
 	private int validity;
 	private String alias;
 	private char[] keystorePass = "test".toCharArray();
+
+	private String signedBy;
 	
 	public CertificateData() {
 		// TODO Auto-generated constructor stub
 	}
 	
 
-	
 
 	public CertificateData(boolean ca, boolean revoked, int keySize, String keyType, String commonName,
 			String organization, String organizationUnit, String city, String state, String country, int validity,
-			String alias, char[] keystorePass) {
+			String alias, char[] keystorePass, String signedBy) {
 		super();
 		this.ca = ca;
 		this.revoked = revoked;
@@ -48,6 +47,7 @@ public class CertificateData {
 		this.validity = validity;
 		this.alias = alias;
 		this.keystorePass = keystorePass;
+		this.signedBy = signedBy;
 	}
 
 
@@ -58,8 +58,23 @@ public class CertificateData {
 		// TODO Auto-generated method stub
 		return Boolean.toString(ca) + " " + Boolean.toString(revoked) + " " + keySize + " " + keyType +
 				" " + commonName + " " + organization + " " + organizationUnit + " " + city + " " + state + " " + country +
-				" " + validity + " " + alias + " " + keystorePass.toString() + "\n";
+				" " + validity + " " + alias + " " + keystorePass.toString() + " " + signedBy + " " + "\n";
 	}
+
+	
+
+	public String getSignedBy() {
+		return signedBy;
+	}
+
+
+
+
+	public void setSignedBy(String signedBy) {
+		this.signedBy = signedBy;
+	}
+
+
 
 
 	public void setKeyType(String keyType) {

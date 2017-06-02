@@ -1,0 +1,107 @@
+<!-- <!DOCTYPE html> -->
+<!-- <html> -->
+<!-- <head> -->
+<!-- <title>homepage</title> -->
+<!-- </head> -->
+<!-- <body> -->
+
+<!-- <form action="/add" class="inline"> -->
+<!--     <button class="float-left submit-button" >Add</button> -->
+<!-- </form> -->
+
+<!-- </body> -->
+<!-- </html> -->
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>homepage</title>
+</head>
+<body>
+
+<!-- <div ng-app=""> -->
+ 
+<h2>Generate certificate:</h2>
+
+<form name="form" ng-submit="napraviMiKljuceve()">
+<table>
+
+<tr>
+<td>Key size:</td><td><select>
+<option value="value1">4096</option>
+<option value="value2">2048</option>
+<option value="value3">1024</option>
+<option value="value4">512</option>
+</select></td>
+</tr>
+
+<tr>
+<td>Validity(days):</td><td> <input type="number" ng-model="validity"></td>
+<p ng-bind="validity"></p>
+</tr>
+
+<tr>
+<td>Common name:</td><td> <input type="text" ng-model="cName"></td>
+<p ng-bind="cName"></p>
+</tr>
+
+<tr>
+<td>Organisation unit:</td> <td><input type="text" ng-model="oUnit"></td>
+<p ng-bind="oUnit"></p>
+</tr>
+
+<tr>
+<td>Organisation name:</td> <td><input type="text" ng-model="oName"></td>
+<p ng-bind="oName"></p>
+</tr>
+
+<tr>
+<td>Locality name:</td> <td><input type="text" ng-model="lName"></td>
+<p ng-bind="lName"></p>
+</tr>
+
+<tr>
+<td>State name:</td> <td><input type="text" ng-model="sName"></td>
+<p ng-bind="sName"></p>
+</tr>
+
+<tr>
+<td>Country:</td><td> <input type="text" ng-model="country"></td>
+<p ng-bind="sName"></p>
+</tr>
+
+<tr>
+<td>Alias:</td><td> <input type="text" ng-model="email"></td>
+<p ng-bind="email"></p>
+</tr>
+
+<tr>
+<td>CA:</td><td> <input type="checkbox" ng-model="ca"></td>
+<p ng-bind="ca"></p>
+</tr>
+
+<tr>
+<td>Revoked:</td><td> <input type="checkbox" ng-model="revoked"></td>
+<p ng-bind="revoked"></p>
+</tr>
+
+<tr>
+<td>Password:</td><td> <input type="password" ng-model="password"></td>
+<p ng-bind="password"></p>
+</tr>
+
+<tr>
+<td colspan="2" align="center" ><button type="submit"">OK</button></td>
+</tr>
+
+<tr>
+<td>Choose certificate:</td><td><select>
+<option value="value1">null</option>
+
+</select></td></tr></table>
+</form>
+
+<!-- </div> -->
+
+</body>
+</html>
